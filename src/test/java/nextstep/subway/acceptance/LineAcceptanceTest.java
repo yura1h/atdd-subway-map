@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
@@ -18,6 +19,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("지하철 노선 관리 기능")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class LineAcceptanceTest extends AcceptanceTest {
     /**
      * When 지하철 노선 생성을 요청 하면
@@ -74,7 +76,7 @@ class LineAcceptanceTest extends AcceptanceTest {
                 .given().log().all()
                 .body(params2).contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when()
-                .post("/lines")
+                .post( "/lines")
                 .then().log().all().extract();
 
         // when
@@ -98,6 +100,30 @@ class LineAcceptanceTest extends AcceptanceTest {
     @DisplayName("지하철 노선 조회")
     @Test
     void getLine() {
+        //given
+        String 삼호선 = "3호선";
+        HashMap <Object, Object> params1 = new HashMap <>();
+        params1.put("name", 삼호선);
+        params1.put("color", "orange");
+        ExtractableResponse<Response> 등록응답 = RestAssured
+                .given().log().all()
+                .body(params1).contentType(MediaType.APPLICATION_JSON_VALUE)
+                .when()
+                .post("/lines")
+                .then().log().all().extract();
+
+        //when
+        Long 노선ID =등록응답.jsonPath().getLong("id");
+        ExtractableResponse<Response> response = RestAssured
+                .given().log().all()
+                .when()
+                .get("/lines"+"/"+노선ID)
+                .then().log().all().extract();
+
+        //then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        Assertions.assertThat(response.jsonPath().getString("name")).isEqualTo(삼호선);
+
     }
 
     /**
